@@ -502,7 +502,12 @@
           </div>
         </div>
       </div>
-      <button class="submit-btn" id="submitBtn" onclick="submitConsult()">🔍 AIに治療方針を相談する</button>
+      <div style="display:flex; gap:10px; margin-top:8px;">
+        <button class="submit-btn" id="copyBtn" onclick="copyToClipboard()" style="background:var(--accent2);color:#0f1117;border:none;">📋 症例テキストをコピーしてClaudeに相談</button>
+      </div>
+      <div id="copySuccess" style="display:none; margin-top:10px; padding:12px 14px; border-radius:8px; background:#1e3a27; border:1px solid #4a9c6a; color:#7ee8a2; font-size:13px;">
+        ✅ コピーしました！Claudeのプロジェクト「肺癌治療方針相談」を開いて貼り付けてください。
+      </div>
     </div>
   </div>
 
@@ -686,6 +691,33 @@ ${d.cq || '特記なし'}
 ■ 議論のポイント（あれば）
 
 専門医向けの簡潔かつ実践的な回答をお願いします。根拠となるガイドラインや試験名（例: FLAURA試験, KEYNOTE-189等）も適宜記載してください。`;
+}
+
+function copyToClipboard() {
+  const d = collectData();
+  if (!d.age || !d.histology || !d.stage) {
+    alert('年齢、組織型、病期は入力してください。');
+    return;
+  }
+  const text = buildPrompt(d);
+  const finish = () => {
+    const msg = document.getElementById('copySuccess');
+    msg.style.display = 'block';
+    setTimeout(() => { msg.style.display = 'none'; }, 5000);
+  };
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(finish).catch(() => {
+      const ta = document.createElement('textarea');
+      ta.value = text; document.body.appendChild(ta);
+      ta.select(); document.execCommand('copy');
+      document.body.removeChild(ta); finish();
+    });
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta); finish();
+  }
 }
 
 async function submitConsult() {
