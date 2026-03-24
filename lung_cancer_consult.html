@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>肺癌治療方針相談</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: #2e3350;
+    --accent: #4f8ef7;
+    --accent2: #7ee8a2;
+    --warn: #f7c94f;
+    --danger: #f77070;
+    --text: #e8eaf0;
+    --text2: #8890a8;
+    --text3: #555e7a;
+    --radius: 10px;
+    --font: 'Noto Sans JP', sans-serif;
+    --mono: 'IBM Plex Mono', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .app { max-width: 900px; margin: 0 auto; padding: 24px 16px; }
+
+  .header {
+    display: flex; align-items: center; gap: 12px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 16px; margin-bottom: 24px;
+  }
+  .header-icon {
+    width: 36px; height: 36px; border-radius: 8px;
+    background: linear-gradient(135deg, #1e3a6e, #4f8ef7);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .header h1 { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+  .header p { font-size: 12px; color: var(--text2); margin-top: 1px; }
+  .header-badge {
+    margin-left: auto; font-size: 10px; font-family: var(--mono);
+    padding: 3px 8px; border-radius: 4px;
+    background: #1e3a6e; color: var(--accent); border: 1px solid #2a4d8f;
+  }
+
+  .tabs {
+    display: flex; gap: 4px; margin-bottom: 20px;
+    border-bottom: 1px solid var(--border); padding-bottom: 0;
+  }
+  .tab {
+    padding: 8px 14px; font-size: 13px; cursor: pointer;
+    border: none; background: none; color: var(--text2);
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+    font-family: var(--font); transition: all 0.15s;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 500; }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    margin-bottom: 14px;
+  }
+  .section-title {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.8px;
+    color: var(--accent); text-transform: uppercase;
+    margin-bottom: 14px; display: flex; align-items: center; gap: 6px;
+  }
+  .section-title::before {
+    content: ''; width: 3px; height: 12px;
+    background: var(--accent); border-radius: 2px; display: block;
+  }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  .span2 { grid-column: span 2; }
+
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label { font-size: 11px; color: var(--text2); font-weight: 500; }
+  .field input, .field select, .field textarea {
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); border-radius: 6px; padding: 7px 10px;
+    font-size: 13px; font-family: var(--font);
+    transition: border-color 0.15s;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    outline: none; border-color: var(--accent);
+  }
+  .field select option { background: var(--surface2); }
+  .field textarea { resize: vertical; min-height: 60px; }
+
+  .radio-group { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+  .radio-btn {
+    padding: 5px 10px; border-radius: 5px; cursor: pointer;
+    font-size: 12px; border: 1px solid var(--border);
+    background: var(--surface2); color: var(--text2);
+    transition: all 0.15s; user-select: none;
+  }
+  .radio-btn.selected {
+    border-color: var(--accent); background: #1e3a6e; color: var(--accent);
+  }
+  .radio-btn:hover:not(.selected) { border-color: var(--text3); color: var(--text); }
+
+  .biomarker-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+  }
+  .bm-item { display: flex; flex-direction: column; gap: 4px; }
+  .bm-label { font-size: 11px; color: var(--text2); font-weight: 700; font-family: var(--mono); }
+  .bm-radios { display: flex; gap: 4px; }
+  .bm-radio {
+    flex: 1; text-align: center; padding: 4px 4px; border-radius: 4px;
+    font-size: 11px; cursor: pointer; border: 1px solid var(--border);
+    background: var(--surface2); color: var(--text3);
+    transition: all 0.12s; user-select: none;
+  }
+  .bm-radio.pos.selected { background: #2d1e4a; border-color: #9f7ddc; color: #c4aaff; }
+  .bm-radio.neg.selected { background: #1e3a27; border-color: #4a9c6a; color: #7ee8a2; }
+  .bm-radio.unk.selected { background: #2a2630; border-color: #555; color: var(--text2); }
+  .bm-radio:hover:not(.selected) { border-color: var(--text3); }
+
+  .ps-selector { display: flex; gap: 6px; }
+  .ps-btn {
+    flex: 1; padding: 8px 4px; text-align: center; border-radius: 6px;
+    font-size: 13px; font-weight: 700; cursor: pointer;
+    border: 1px solid var(--border); background: var(--surface2); color: var(--text3);
+    transition: all 0.15s; font-family: var(--mono); user-select: none;
+  }
+  .ps-btn.selected.ps0 { background: #1e3a27; border-color: var(--accent2); color: var(--accent2); }
+  .ps-btn.selected.ps1 { background: #1e3230; border-color: #4fd0d0; color: #4fd0d0; }
+  .ps-btn.selected.ps2 { background: #3a3a1e; border-color: var(--warn); color: var(--warn); }
+  .ps-btn.selected.ps3 { background: #3a2a1e; border-color: #f7a34f; color: #f7a34f; }
+  .ps-btn.selected.ps4 { background: #3a1e1e; border-color: var(--danger); color: var(--danger); }
+
+  .submit-btn {
+    width: 100%; padding: 13px; border-radius: var(--radius);
+    background: var(--accent); color: white; border: none;
+    font-size: 15px; font-weight: 700; cursor: pointer; font-family: var(--font);
+    transition: all 0.2s; margin-top: 8px; letter-spacing: 0.3px;
+  }
+  .submit-btn:hover { background: #6a9ff8; transform: translateY(-1px); }
+  .submit-btn:active { transform: translateY(0); }
+  .submit-btn:disabled { background: var(--border); color: var(--text3); cursor: not-allowed; transform: none; }
+
+  .result-panel { display: none; }
+  .result-panel.visible { display: block; }
+
+  .result-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden; margin-bottom: 14px;
+  }
+  .result-header {
+    padding: 12px 16px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .result-header-icon {
+    width: 28px; height: 28px; border-radius: 6px;
+    background: #1e3a6e; display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+  }
+  .result-header h3 { font-size: 14px; font-weight: 700; }
+  .result-body { padding: 16px; }
+  .result-body p { font-size: 13px; line-height: 1.8; color: var(--text2); margin-bottom: 10px; }
+  .result-body p:last-child { margin-bottom: 0; }
+
+  .loading {
+    padding: 40px; text-align: center;
+  }
+  .loading-dots { display: flex; gap: 6px; justify-content: center; margin-bottom: 12px; }
+  .loading-dot {
+    width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+  .loading-dot:nth-child(2) { animation-delay: 0.2s; }
+  .loading-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes pulse { 0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); } 40% { opacity: 1; transform: scale(1); } }
+  .loading p { color: var(--text2); font-size: 13px; }
+
+  .ai-response {
+    font-size: 13px; line-height: 1.9; color: var(--text);
+    white-space: pre-wrap; font-family: var(--font);
+  }
+  .ai-response strong { color: var(--accent); font-weight: 700; }
+
+  .tag {
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    font-size: 11px; font-family: var(--mono); font-weight: 500;
+  }
+  .tag-info { background: #1e3a6e; color: var(--accent); border: 1px solid #2a4d8f; }
+  .tag-success { background: #1e3a27; color: var(--accent2); border: 1px solid #2a5a3a; }
+  .tag-warn { background: #3a3a1e; color: var(--warn); border: 1px solid #5a5a2a; }
+  .tag-danger { background: #3a1e1e; color: var(--danger); border: 1px solid #5a2a2a; }
+
+  .summary-bar {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px 14px; margin-bottom: 14px;
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+  }
+  .summary-item { font-size: 12px; color: var(--text2); }
+  .summary-item span { color: var(--text); font-weight: 500; }
+
+  .back-btn {
+    background: none; border: 1px solid var(--border); color: var(--text2);
+    padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px;
+    font-family: var(--font); transition: all 0.15s; margin-bottom: 16px;
+  }
+  .back-btn:hover { border-color: var(--text3); color: var(--text); }
+
+  .disclaimer {
+    margin-top: 20px; padding: 12px 14px; border-radius: 8px;
+    background: #2a2415; border: 1px solid #4a3d20;
+    font-size: 11px; color: #b8a060; line-height: 1.6;
+  }
+
+  @media (max-width: 600px) {
+    .grid2 { grid-template-columns: 1fr; }
+    .grid3 { grid-template-columns: 1fr 1fr; }
+    .biomarker-grid { grid-template-columns: repeat(2, 1fr); }
+    .span2 { grid-column: span 1; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="header-icon">🫁</div>
+    <div>
+      <h1>肺癌治療方針相談</h1>
+      <p>症例情報を入力してAIによるガイドライン準拠の方針を取得</p>
+    </div>
+    <div class="header-badge">v1.0</div>
+  </div>
+
+  <div id="formSection">
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab(0)">患者・全身状態</button>
+      <button class="tab" onclick="switchTab(1)">腫瘍プロファイル</button>
+      <button class="tab" onclick="switchTab(2)">バイオマーカー</button>
+      <button class="tab" onclick="switchTab(3)">背景・相談事項</button>
+    </div>
+
+    <!-- Tab 0: 患者・全身状態 -->
+    <div class="panel active" id="panel0">
+      <div class="section">
+        <div class="section-title">基本情報</div>
+        <div class="grid2">
+          <div class="field">
+            <label>年齢</label>
+            <input type="number" id="age" placeholder="例: 68" min="1" max="120">
+          </div>
+          <div class="field">
+            <label>性別</label>
+            <div class="radio-group" id="sex">
+              <div class="radio-btn" onclick="selectRadio('sex', '男性', this)">男性</div>
+              <div class="radio-btn" onclick="selectRadio('sex', '女性', this)">女性</div>
+            </div>
+          </div>
+          <div class="field span2">
+            <label>主訴 / 発見契機</label>
+            <input type="text" id="chief_complaint" placeholder="例: 健診胸部X線異常、咳嗽・血痰">
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">喫煙歴</div>
+        <div class="grid3">
+          <div class="field">
+            <label>喫煙歴</label>
+            <div class="radio-group" id="smoking">
+              <div class="radio-btn" onclick="selectRadio('smoking', 'なし', this)">なし</div>
+              <div class="radio-btn" onclick="selectRadio('smoking', 'あり', this)">あり</div>
+            </div>
+          </div>
+          <div class="field">
+            <label>Brinkman Index</label>
+            <input type="number" id="bi" placeholder="本/日 × 年数">
+          </div>
+          <div class="field">
+            <label>本数/日</label>
+            <input type="number" id="smoke_per_day" placeholder="例: 20">
+          </div>
+          <div class="field">
+            <label>開始年齢</label>
+            <input type="number" id="smoke_start" placeholder="例: 20">
+          </div>
+          <div class="field">
+            <label>終了年齢（喫煙中は空欄）</label>
+            <input type="number" id="smoke_end" placeholder="例: 60">
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">全身状態</div>
+        <div class="field" style="margin-bottom:12px">
+          <label>ECOG Performance Status</label>
+          <div class="ps-selector">
+            <div class="ps-btn ps0" onclick="selectPS(0, this)">0</div>
+            <div class="ps-btn ps1" onclick="selectPS(1, this)">1</div>
+            <div class="ps-btn ps2" onclick="selectPS(2, this)">2</div>
+            <div class="ps-btn ps3" onclick="selectPS(3, this)">3</div>
+            <div class="ps-btn ps4" onclick="selectPS(4, this)">4</div>
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="field">
+            <label>間質性肺炎</label>
+            <div class="radio-group" id="ip">
+              <div class="radio-btn" onclick="selectRadio('ip', 'なし', this)">なし</div>
+              <div class="radio-btn" onclick="selectRadio('ip', 'あり', this)">あり</div>
+              <div class="radio-btn" onclick="selectRadio('ip', '疑い', this)">疑い</div>
+            </div>
+          </div>
+          <div class="field">
+            <label>主要な併存疾患</label>
+            <input type="text" id="comorbidity" placeholder="例: 糖尿病、CKD G3a">
+          </div>
+          <div class="field">
+            <label>eGFR (mL/min)</label>
+            <input type="number" id="egfr" placeholder="例: 58">
+          </div>
+          <div class="field">
+            <label>肝機能</label>
+            <div class="radio-group" id="liver">
+              <div class="radio-btn" onclick="selectRadio('liver', '問題なし', this)">問題なし</div>
+              <div class="radio-btn" onclick="selectRadio('liver', '異常あり', this)">異常あり</div>
+            </div>
+          </div>
+          <div class="field">
+            <label>アレルギー歴</label>
+            <div class="radio-group" id="allergy">
+              <div class="radio-btn" onclick="selectRadio('allergy', 'なし', this)">なし</div>
+              <div class="radio-btn" onclick="selectRadio('allergy', 'あり', this)">あり</div>
+            </div>
+          </div>
+          <div class="field">
+            <label>家族歴</label>
+            <input type="text" id="family_hx" placeholder="例: 特記事項なし、父: 肺癌">
+          </div>
+        </div>
+      </div>
+      <button class="submit-btn" style="background:var(--surface2);color:var(--accent);border:1px solid var(--accent);margin-top:0" onclick="switchTab(1)">次へ: 腫瘍プロファイル →</button>
+    </div>
+
+    <!-- Tab 1: 腫瘍プロファイル -->
+    <div class="panel" id="panel1">
+      <div class="section">
+        <div class="section-title">組織型・病期</div>
+        <div class="grid2">
+          <div class="field span2">
+            <label>組織型</label>
+            <div class="radio-group" id="histology">
+              <div class="radio-btn" onclick="selectRadio('histology', '腺癌', this)">腺癌</div>
+              <div class="radio-btn" onclick="selectRadio('histology', '扁平上皮癌', this)">扁平上皮癌</div>
+              <div class="radio-btn" onclick="selectRadio('histology', '大細胞癌', this)">大細胞癌</div>
+              <div class="radio-btn" onclick="selectRadio('histology', '小細胞肺癌', this)">小細胞肺癌</div>
+              <div class="radio-btn" onclick="selectRadio('histology', 'その他/未確定', this)">その他/未確定</div>
+            </div>
+          </div>
+          <div class="field">
+            <label>T分類</label>
+            <select id="t_class">
+              <option value="">選択</option>
+              <option>T1a</option><option>T1b</option><option>T1c</option>
+              <option>T2a</option><option>T2b</option>
+              <option>T3</option><option>T4</option><option>Tx</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>N分類</label>
+            <select id="n_class">
+              <option value="">選択</option>
+              <option>N0</option><option>N1</option><option>N2</option><option>N3</option><option>Nx</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>M分類</label>
+            <select id="m_class">
+              <option value="">選択</option>
+              <option>M0</option><option>M1a</option><option>M1b</option><option>M1c</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>臨床病期 (Stage)</label>
+            <select id="stage">
+              <option value="">選択</option>
+              <option>IA1</option><option>IA2</option><option>IA3</option>
+              <option>IB</option><option>IIA</option><option>IIB</option>
+              <option>IIIA</option><option>IIIB</option><option>IIIC</option>
+              <option>IVA</option><option>IVB</option>
+              <option>限局型(SCLC)</option><option>進展型(SCLC)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>原発部位・サイズ</label>
+            <input type="text" id="primary_site" placeholder="例: 右肺上葉 3.2cm">
+          </div>
+          <div class="field span2">
+            <label>遠隔転移部位</label>
+            <div class="radio-group" id="metastasis">
+              <div class="radio-btn" onclick="toggleMeta('なし', this)">なし</div>
+              <div class="radio-btn" onclick="toggleMeta('脳', this)">脳</div>
+              <div class="radio-btn" onclick="toggleMeta('骨', this)">骨</div>
+              <div class="radio-btn" onclick="toggleMeta('肝', this)">肝</div>
+              <div class="radio-btn" onclick="toggleMeta('副腎', this)">副腎</div>
+              <div class="radio-btn" onclick="toggleMeta('対側肺', this)">対側肺</div>
+              <div class="radio-btn" onclick="toggleMeta('胸膜播種', this)">胸膜播種</div>
+              <div class="radio-btn" onclick="toggleMeta('その他', this)">その他</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button class="submit-btn" style="background:var(--surface2);color:var(--accent);border:1px solid var(--accent);margin-top:0" onclick="switchTab(2)">次へ: バイオマーカー →</button>
+    </div>
+
+    <!-- Tab 2: バイオマーカー -->
+    <div class="panel" id="panel2">
+      <div class="section">
+        <div class="section-title">ドライバー変異 / 免疫チェックポイント</div>
+        <div class="biomarker-grid" id="biomarkerGrid">
+          <!-- JS で生成 -->
+        </div>
+        <div class="grid2" style="margin-top:14px">
+          <div class="field">
+            <label>PD-L1 TPS (%)</label>
+            <input type="number" id="pdl1" placeholder="例: 60" min="0" max="100">
+          </div>
+          <div class="field">
+            <label>MSI / TMB (あれば)</label>
+            <input type="text" id="msi_tmb" placeholder="例: TMB-High 15 mut/Mb">
+          </div>
+        </div>
+      </div>
+      <button class="submit-btn" style="background:var(--surface2);color:var(--accent);border:1px solid var(--accent);margin-top:0" onclick="switchTab(3)">次へ: 背景・相談事項 →</button>
+    </div>
+
+    <!-- Tab 3: 背景・相談事項 -->
+    <div class="panel" id="panel3">
+      <div class="section">
+        <div class="section-title">社会的背景・患者意向</div>
+        <div class="grid2">
+          <div class="field">
+            <label>病名認知（本人）</label>
+            <div class="radio-group" id="disclosure_pt">
+              <div class="radio-btn" onclick="selectRadio('disclosure_pt', '告知済', this)">告知済</div>
+              <div class="radio-btn" onclick="selectRadio('disclosure_pt', '未告知', this)">未告知</div>
+            </div>
+          </div>
+          <div class="field">
+            <label>病名認知（家族）</label>
+            <div class="radio-group" id="disclosure_fam">
+              <div class="radio-btn" onclick="selectRadio('disclosure_fam', '告知済', this)">告知済</div>
+              <div class="radio-btn" onclick="selectRadio('disclosure_fam', '未告知', this)">未告知</div>
+            </div>
+          </div>
+          <div class="field">
+            <label>キーパーソン</label>
+            <input type="text" id="key_person" placeholder="例: 妻（配偶者）">
+          </div>
+          <div class="field">
+            <label>社会的サポート</label>
+            <input type="text" id="social_support" placeholder="例: 家族同居、要介護なし">
+          </div>
+          <div class="field span2">
+            <label>治療に対する希望・意向</label>
+            <textarea id="pt_preference" placeholder="例: 積極的治療希望、外来通院可能、副作用は少なめを希望"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title">提案方針・相談事項</div>
+        <div class="grid2">
+          <div class="field">
+            <label>検討している方針（第1選択）</label>
+            <input type="text" id="plan1" placeholder="例: オシメルチニブ単剤">
+          </div>
+          <div class="field">
+            <label>代替案（第2選択）</label>
+            <input type="text" id="plan2" placeholder="例: ゲフィチニブ＋ラムシルマブ">
+          </div>
+          <div class="field span2">
+            <label>相談事項・Clinical Question</label>
+            <textarea id="cq" style="min-height:80px" placeholder="例: EGFR Ex19del陽性、PS1、脳転移あり。一次治療としてオシメルチニブを選択したいが、脳転移に対する追加局所療法の適応とタイミングを相談したい。"></textarea>
+          </div>
+        </div>
+      </div>
+      <button class="submit-btn" id="submitBtn" onclick="submitConsult()">🔍 AIに治療方針を相談する</button>
+    </div>
+  </div>
+
+  <!-- Result Section -->
+  <div id="resultSection" class="result-panel">
+    <button class="back-btn" onclick="backToForm()">← 入力画面に戻る</button>
+    <div id="summaryBar" class="summary-bar"></div>
+    <div id="loadingDiv" class="loading">
+      <div class="loading-dots">
+        <div class="loading-dot"></div>
+        <div class="loading-dot"></div>
+        <div class="loading-dot"></div>
+      </div>
+      <p>ガイドラインと照合中...</p>
+    </div>
+    <div id="resultContent" style="display:none">
+      <div class="result-card">
+        <div class="result-header">
+          <div class="result-header-icon">📋</div>
+          <h3>治療方針コンサルト結果</h3>
+        </div>
+        <div class="result-body">
+          <div class="ai-response" id="aiResponseText"></div>
+        </div>
+      </div>
+      <div class="disclaimer">
+        ⚠️ 本ツールはAIによる参考情報の提供を目的としています。最終的な治療方針の決定は担当医師の臨床判断によって行われる必要があります。最新のガイドラインおよびエビデンスを確認の上、ご使用ください。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const state = {
+  sex: '', smoking: '', ip: '', liver: '', allergy: '',
+  histology: '', metastasis: [], disclosure_pt: '', disclosure_fam: '',
+  ps: null,
+  biomarkers: { EGFR:'未検', ALK:'未検', ROS1:'未検', BRAF:'未検', MET:'未検', RET:'未検', KRAS:'未検', NTRK:'未検' }
+};
+
+function switchTab(idx) {
+  document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === idx));
+  document.querySelectorAll('.panel').forEach((p, i) => p.classList.toggle('active', i === idx));
+}
+
+function selectRadio(key, val, el) {
+  state[key] = val;
+  el.closest('.radio-group').querySelectorAll('.radio-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function selectPS(val, el) {
+  state.ps = val;
+  document.querySelectorAll('.ps-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function toggleMeta(val, el) {
+  if (val === 'なし') {
+    state.metastasis = ['なし'];
+    document.querySelectorAll('#metastasis .radio-btn').forEach(b => b.classList.remove('selected'));
+    el.classList.add('selected');
+    return;
+  }
+  const noneBtn = document.querySelector('#metastasis .radio-btn:first-child');
+  noneBtn.classList.remove('selected');
+  state.metastasis = state.metastasis.filter(v => v !== 'なし');
+  if (el.classList.contains('selected')) {
+    el.classList.remove('selected');
+    state.metastasis = state.metastasis.filter(v => v !== val);
+  } else {
+    el.classList.add('selected');
+    state.metastasis.push(val);
+  }
+}
+
+// バイオマーカーグリッド生成
+const markers = ['EGFR', 'ALK', 'ROS1', 'BRAF', 'MET', 'RET', 'KRAS', 'NTRK'];
+const grid = document.getElementById('biomarkerGrid');
+markers.forEach(m => {
+  const div = document.createElement('div');
+  div.className = 'bm-item';
+  div.innerHTML = `
+    <div class="bm-label">${m}</div>
+    <div class="bm-radios">
+      <div class="bm-radio pos" onclick="setBM('${m}','陽性',this)">陽</div>
+      <div class="bm-radio neg" onclick="setBM('${m}','陰性',this)">陰</div>
+      <div class="bm-radio unk selected" onclick="setBM('${m}','未検',this)">未</div>
+    </div>`;
+  grid.appendChild(div);
+});
+
+function setBM(marker, val, el) {
+  state.biomarkers[marker] = val;
+  const radios = el.closest('.bm-radios').querySelectorAll('.bm-radio');
+  radios.forEach(r => r.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function collectData() {
+  return {
+    age: document.getElementById('age').value,
+    sex: state.sex,
+    chief_complaint: document.getElementById('chief_complaint').value,
+    smoking: state.smoking,
+    bi: document.getElementById('bi').value,
+    smoke_per_day: document.getElementById('smoke_per_day').value,
+    smoke_start: document.getElementById('smoke_start').value,
+    smoke_end: document.getElementById('smoke_end').value,
+    ps: state.ps,
+    ip: state.ip,
+    comorbidity: document.getElementById('comorbidity').value,
+    egfr: document.getElementById('egfr').value,
+    liver: state.liver,
+    allergy: state.allergy,
+    family_hx: document.getElementById('family_hx').value,
+    histology: state.histology,
+    t: document.getElementById('t_class').value,
+    n: document.getElementById('n_class').value,
+    m: document.getElementById('m_class').value,
+    stage: document.getElementById('stage').value,
+    primary_site: document.getElementById('primary_site').value,
+    metastasis: state.metastasis,
+    biomarkers: state.biomarkers,
+    pdl1: document.getElementById('pdl1').value,
+    msi_tmb: document.getElementById('msi_tmb').value,
+    disclosure_pt: state.disclosure_pt,
+    disclosure_fam: state.disclosure_fam,
+    key_person: document.getElementById('key_person').value,
+    social_support: document.getElementById('social_support').value,
+    pt_preference: document.getElementById('pt_preference').value,
+    plan1: document.getElementById('plan1').value,
+    plan2: document.getElementById('plan2').value,
+    cq: document.getElementById('cq').value,
+  };
+}
+
+function buildPrompt(d) {
+  const bmStr = Object.entries(d.biomarkers).map(([k,v]) => `${k}: ${v}`).join(' / ');
+  return `あなたは腫瘍内科・呼吸器内科の専門医として、以下の肺癌症例について日本のガイドライン（JSMO/JLCS最新版）に準拠した治療方針を回答してください。
+
+【症例サマリー】
+- ${d.age}歳 ${d.sex}
+- 主訴/発見契機: ${d.chief_complaint || '不明'}
+- 喫煙歴: ${d.smoking}${d.bi ? `（BI: ${d.bi}）` : ''}
+- ECOG PS: ${d.ps !== null ? d.ps : '未入力'}
+- 間質性肺炎: ${d.ip || '未入力'}
+- 主要併存疾患: ${d.comorbidity || 'なし'}
+- eGFR: ${d.egfr ? d.egfr + ' mL/min' : '不明'}
+- 肝機能: ${d.liver || '不明'}
+
+【腫瘍プロファイル】
+- 組織型: ${d.histology || '未確定'}
+- TNM: ${[d.t, d.n, d.m].filter(Boolean).join('') || '未入力'} / Stage ${d.stage || '未入力'}
+- 原発巣: ${d.primary_site || '不明'}
+- 遠隔転移: ${d.metastasis.length ? d.metastasis.join(', ') : '未入力'}
+
+【バイオマーカー】
+${bmStr}
+PD-L1 TPS: ${d.pdl1 !== '' ? d.pdl1 + '%' : '未検'}
+${d.msi_tmb ? 'MSI/TMB: ' + d.msi_tmb : ''}
+
+【患者背景】
+- 病名認知: 本人${d.disclosure_pt || '未'}／家族${d.disclosure_fam || '未'}
+- 治療希望: ${d.pt_preference || '特記なし'}
+
+【検討方針】
+- 第1選択案: ${d.plan1 || '未記載'}
+- 第2選択案: ${d.plan2 || '未記載'}
+
+【Clinical Question】
+${d.cq || '特記なし'}
+
+---
+以下の構成で回答してください：
+
+■ 症例の整理と治療決定の要点
+■ 推奨一次治療（ガイドライン根拠を明記）
+■ 提案方針への評価・コメント
+■ 注意事項・モニタリングポイント
+■ 議論のポイント（あれば）
+
+専門医向けの簡潔かつ実践的な回答をお願いします。根拠となるガイドラインや試験名（例: FLAURA試験, KEYNOTE-189等）も適宜記載してください。`;
+}
+
+async function submitConsult() {
+  const d = collectData();
+  if (!d.age || !d.histology || !d.stage) {
+    alert('年齢、組織型、病期は入力してください。');
+    return;
+  }
+
+  document.getElementById('formSection').style.display = 'none';
+  const rs = document.getElementById('resultSection');
+  rs.classList.add('visible');
+
+  // Summary bar
+  const pos_markers = Object.entries(d.biomarkers).filter(([k,v]) => v === '陽性').map(([k]) => k);
+  document.getElementById('summaryBar').innerHTML = `
+    <div class="summary-item">${d.age}歳 <span>${d.sex || '—'}</span></div>
+    <div class="summary-item">組織型: <span>${d.histology || '—'}</span></div>
+    <div class="summary-item">Stage: <span>${d.stage || '—'}</span></div>
+    <div class="summary-item">PS: <span>${d.ps !== null ? d.ps : '—'}</span></div>
+    <div class="summary-item">陽性マーカー: <span>${pos_markers.length ? pos_markers.join(', ') : 'なし'}</span></div>
+    ${d.pdl1 !== '' ? `<div class="summary-item">PD-L1: <span>${d.pdl1}%</span></div>` : ''}
+  `;
+
+  document.getElementById('loadingDiv').style.display = 'block';
+  document.getElementById('resultContent').style.display = 'none';
+
+  try {
+    const prompt = buildPrompt(d);
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await res.json();
+    const text = data.content?.find(c => c.type === 'text')?.text || '回答を取得できませんでした。';
+
+    document.getElementById('loadingDiv').style.display = 'none';
+    document.getElementById('resultContent').style.display = 'block';
+
+    // Render with basic formatting
+    const formatted = text
+      .replace(/■ (.+)/g, '<strong>■ $1</strong>')
+      .replace(/【(.+?)】/g, '<strong>【$1】</strong>');
+    document.getElementById('aiResponseText').innerHTML = formatted;
+
+  } catch(e) {
+    document.getElementById('loadingDiv').style.display = 'none';
+    document.getElementById('resultContent').style.display = 'block';
+    document.getElementById('aiResponseText').textContent = 'エラーが発生しました: ' + e.message;
+  }
+}
+
+function backToForm() {
+  document.getElementById('resultSection').classList.remove('visible');
+  document.getElementById('formSection').style.display = 'block';
+}
+</script>
+</body>
+</html>
